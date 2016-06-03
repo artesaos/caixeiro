@@ -96,8 +96,8 @@ Após setar as chaves e demais informações, você deve utilizar a **trait** `A
 <?php
 
 namespace App;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Artesaos\Caixeiro\Billable;
 
 class User extends Authenticatable
