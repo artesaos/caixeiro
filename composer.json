@@ -1,0 +1,14 @@
+{
+    "name": "arteaos/caixeiro",
+    "description": "Solução de Pagamentos Recorrentes para Laravel",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Diego Hernandes",
+            "email": "diego@hernandev.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
