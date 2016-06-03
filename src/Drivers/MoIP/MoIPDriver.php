@@ -232,6 +232,10 @@ class MoIPDriver implements Driver
             ];
         }
 
+        if ($builder->shouldUseBankSlip()) {
+            $subscription->payment_method = 'BOLETO';
+        }
+
         $subscription->save();
 
         if ($subscription->hasErrors()) {
@@ -243,5 +247,44 @@ class MoIPDriver implements Driver
         $billable->save();
 
         return true;
+    }
+
+    /**
+     * @param Model $billable
+     * @return Subscription|null
+     */
+    protected function cachedSubscription(Model $billable)
+    {
+        $cacheStore = app('cache');
+
+        $subscription_id = $billable->subscription_id;
+
+        if ($subscription_id) {
+            if (!$cacheStore->has($subscription_id)) {
+                $subscription = Subscription::find($subscription_id);
+                if ($subscription) {
+                    $cacheStore->put($subscription_id, $subscription, 10);
+                }
+            }
+
+            return $cacheStore->get($subscription_id, null);
+        }
+
+        return null;
+    }
+
+    public function active(Model $billable)
+    {
+        $subscription = $this->cachedSubscription($billable);
+
+        if (!$subscription) {
+            throw new CaixeiroException('No Subscription Found');
+        }
+
+        if ($subscription->status == 'ACTIVE' || $subscription->status == 'TRIAL') {
+            return true;
+        }
+
+        return false;
     }
 }

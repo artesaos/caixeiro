@@ -170,6 +170,13 @@ $user->newSubscription('plano-basico')
 $user->newSubscription('plano-basico')
 	->withCoupon('LARAVEL50')
 	->create();
+	
+// As opções também podem ser combinadas:
+$user->newSubscription('plano-basico')
+	->withCustomAmount(12000)
+	->withCoupon('LARAVEL50')
+	->withBankSlip()
+	->create();
 
 ```
 
