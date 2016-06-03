@@ -43,12 +43,11 @@ interface Driver
     public function activateSubscription($billable);
 
     /**
-     * @param Model           $billable
      * @param CustomerBuilder $builder
      *
      * @return bool
      */
-    public function prepareCustomer(Model $billable, CustomerBuilder $builder);
+    public function prepareCustomer(CustomerBuilder $builder);
 
     /**
      * @param Model               $billable

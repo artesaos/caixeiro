@@ -19,7 +19,7 @@ class CaixeiroServiceProvider extends ServiceProvider
 
     protected function detectDriver()
     {
-        $driverName = env('CAIXEIRO_DRIVER', null);
+        $driverName = config('services.caixeiro.driver');
 
         switch ($driverName) {
             case 'moip': {
@@ -47,7 +47,7 @@ class CaixeiroServiceProvider extends ServiceProvider
 
     protected function bindBillableModel()
     {
-        $model = env('CAIXEIRO_MODEL', 'App\User');
+        $model = config('services.caixeiro.model');
 
         $this->app->bind('caixeiro.model', $model);
     }

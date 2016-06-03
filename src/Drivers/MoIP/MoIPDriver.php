@@ -19,9 +19,9 @@ class MoIPDriver implements Driver
      */
     public function setup()
     {
-        $apiToken = env('MOIP_API_TOKEN', null);
-        $apiKey = env('MOIP_API_KEY', null);
-        $production = env('MOIP_PRODUCTION', false);
+        $apiToken = config('services.moip.token');
+        $apiKey = config('services.moip.key');
+        $production = config('services.moip.production');
 
         MoIPSubscriptions::setCredentials($apiToken, $apiKey, $production);
     }
@@ -99,13 +99,13 @@ class MoIPDriver implements Driver
     }
 
     /**
-     * @param Model           $billable
      * @param CustomerBuilder $builder
      *
      * @return bool
      */
-    public function prepareCustomer(Model $billable, CustomerBuilder $builder)
+    public function prepareCustomer(CustomerBuilder $builder)
     {
+        $billable = $builder->getBillable();
         if (!$billable->customer_id) {
             $customer = new Customer();
 

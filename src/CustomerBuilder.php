@@ -2,38 +2,53 @@
 
 namespace Artesaos\Caixeiro;
 
+use Artesaos\Caixeiro\Contracts\Driver\Driver;
 use Illuminate\Database\Eloquent\Model;
 
 class CustomerBuilder
 {
+    /**
+     * @var Model The billable model instance (commonly User).
+     */
     protected $billable;
 
+    /**
+     * @var bool Is a credit card data present on the customer information?.
+     */
     protected $cardPresent = false;
 
+    /**
+     * @var array The credit card data.
+     */
     protected $cardData;
 
     /**
-     * CustomerBuilder constructor.
+     * Sets the billable into the builder scope.
      *
-     * @param $billable
+     * @param Model $billable The billable instance.
      */
-    public function __construct($billable)
+    public function __construct(Model $billable)
     {
         $this->billable = $billable;
     }
 
     /**
-     * @param $holder
-     * @param $number
-     * @param $expMonth
-     * @param $expYear
-     * @param null $cvc
+     * Setup the credit card information into the customer builder.
      *
-     * @return $this
+     * @param string $holder Credit card holder name.
+     * @param string $number Credit card full number.
+     * @param string $expMonth Credit card expiration month.
+     * @param string $expYear Credit card expiration year.
+     * @param string|null $cvc Credit card verification code.
+     *
+     * @return CustomerBuilder $this
      */
     public function withCreditCard($holder, $number, $expMonth, $expYear, $cvc = null)
     {
+        // set the cardPresent attribute to inform a credit card data is available.
         $this->cardPresent = true;
+
+        // set the credit card information into the builder scope.
         $this->cardData = [
             'holder_name' => $holder,
             'number' => $number,
@@ -41,36 +56,50 @@ class CustomerBuilder
             'expiration_year' => $expYear,
         ];
 
+        // if there is a verification code, set it on the credit card data scope.
         if ($cvc) {
             $this->cardData['verification_code'] = $cvc;
         }
 
+        // Return the builder instance to keep up with the fluent interface.
         return $this;
     }
 
     /**
+     * Creates the customer into the payment gateway.
+     * 
      * @return mixed
      */
     public function save()
     {
+        // detects the driver
+        /** @var Driver $driver */
         $driver = app('caixeiro.driver');
 
-        return $driver->prepareCustomer($this->billable, $this);
+        // call the driver customer preparation passing the billable instance and
+        // the CustomerBuilder itself.
+        return $driver->prepareCustomer($this);
     }
 
     /**
-     * @return Model
+     * @return Model The billable instance.
      */
     public function getBillable()
     {
         return $this->billable;
     }
 
+    /**
+     * @return bool Is a card present? (public access)
+     */
     public function cardPresent()
     {
         return $this->cardPresent;
     }
 
+    /**
+     * @return array Returns the card data, if any.
+     */
     public function getCardData()
     {
         return $this->cardData;

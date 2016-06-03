@@ -69,7 +69,24 @@ $table->string('address_zip')->nullable();
 
 
 #### Ambiente
-Para que o Caixeiro inicie corretamente o cliente do MoIP e reconheça o modelo adequado, você deve adicionar ao seu arquivo .env as seguintes configurações.
+Para que o Caixeiro inicie corretamente o cliente do MoIP e reconheça o modelo adequado, você deve adicionar ao seu arquivo **`config/services.php`** as seguintes configurações.
+
+```php
+
+'caixeiro' => [
+    'model' => env('CAIXEIRO_MODEL', App\User::class),
+    'driver' => env('CAIXEIRO_DRIVER', 'moip'),
+],
+    
+'moip'  =>  [
+    'token' =>  env('MOIP_API_TOKEN', null),
+    'key' =>  env('MOIP_API_KEY', null),
+    'production' => env('MOIP_PRODUCTION', false),
+],
+
+```
+
+Veja que no exemplo, as informações estão sendo buscadas no arquivo .env da sua aplicação, o que pode ser feito da seguinte forma:
 
 ```ini
 CAIXEIRO_MODEL=App\User
@@ -78,8 +95,6 @@ MOIP_API_TOKEN=ABCDEFGHIJKLMNOPQRSTUVYXWZ
 MOIP_API_KEY=ABCDEFGHIJKLMNOPQRSTUVYXWZ0123456789
 MOIP_PRODUCTION=false
 ```
-
-A as chaves de configuraçõa `CAIXIERO_MODEL` e `MOIP_PRODUCTION` são opcionais, onde o default é `App\User` e `false` respectivate.
 
 #### Service Provider
 É claro, como é de praxe em pacotes para Laravel, você precisa registar o service provider do Caixeiro:
