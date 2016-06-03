@@ -5,6 +5,12 @@ namespace Artesaos\Caixeiro;
 use Artesaos\Caixeiro\Contracts\Driver\Driver;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * CustomerBuilder.
+ * 
+ * Class responsible for building the customer information based on the model
+ * with possible additional information, like the credit card info.
+ */
 class CustomerBuilder
 {
     /**
@@ -35,11 +41,11 @@ class CustomerBuilder
     /**
      * Setup the credit card information into the customer builder.
      *
-     * @param string $holder Credit card holder name.
-     * @param string $number Credit card full number.
-     * @param string $expMonth Credit card expiration month.
-     * @param string $expYear Credit card expiration year.
-     * @param string|null $cvc Credit card verification code.
+     * @param string      $holder   Credit card holder name.
+     * @param string      $number   Credit card full number.
+     * @param string      $expMonth Credit card expiration month.
+     * @param string      $expYear  Credit card expiration year.
+     * @param string|null $cvc      Credit card verification code.
      *
      * @return CustomerBuilder $this
      */

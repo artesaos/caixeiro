@@ -251,6 +251,7 @@ class MoIPDriver implements Driver
 
     /**
      * @param Model $billable
+     *
      * @return Subscription|null
      */
     protected function cachedSubscription(Model $billable)
@@ -270,7 +271,7 @@ class MoIPDriver implements Driver
             return $cacheStore->get($subscription_id, null);
         }
 
-        return null;
+        return;
     }
 
     public function active(Model $billable)
