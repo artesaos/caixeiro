@@ -132,7 +132,7 @@ Antes de criar uma assinatura, precisamos criar um cliente junto ao gateway, pas
  * a assinatura é ligada a um usuáro.
  * Qualquer model que use a Trait Billable
  * pode ser usada.
- * /
+ */
 
 $user->customerData()
 	// Nome Completo
