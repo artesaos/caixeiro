@@ -6,6 +6,9 @@ use Artesaos\Caixeiro\Contracts\Driver\Driver;
 
 trait Billable
 {
+    use HandleCustomers;
+    use HandleSubscriptions;
+    
     /**
      * @var Driver
      */
@@ -22,37 +25,9 @@ trait Billable
 
         $this->caixeiroDriver = app('caixeiro.driver');
     }
-
-    /**
-     * @return CustomerBuilder
-     */
-    public function prepareCustomer()
+    
+    public function subscription()
     {
-        return new CustomerBuilder($this);
-    }
-
-    public function updateCustomerDetails()
-    {
-        return $this->caixeiroDriver->updateCustomerDetails($this);
-    }
-
-    public function newSubscription($planCode)
-    {
-        return new SubscriptionBuilder($this, $planCode);
-    }
-
-    public function suspendSubscription()
-    {
-        return $this->caixeiroDriver->suspendSubscription($this);
-    }
-
-    public function activateSubscription()
-    {
-        return $this->caixeiroDriver->activateSubscription($this);
-    }
-
-    public function cancelSubscription()
-    {
-        return $this->caixeiroDriver->cancelSubscription($this);
+        return $this->hasOne(Subscription::class, 'billable_id');
     }
 }

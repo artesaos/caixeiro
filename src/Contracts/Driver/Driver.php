@@ -2,8 +2,8 @@
 
 namespace Artesaos\Caixeiro\Contracts\Driver;
 
-use Artesaos\Caixeiro\CustomerBuilder;
-use Artesaos\Caixeiro\SubscriptionBuilder;
+use Artesaos\Caixeiro\Builders\CustomerBuilder;
+use Artesaos\Caixeiro\Builders\SubscriptionBuilder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -50,17 +50,15 @@ interface Driver
     public function prepareCustomer(CustomerBuilder $builder);
 
     /**
-     * @param Model               $billable
      * @param SubscriptionBuilder $builder
      *
      * @return mixed
      */
-    public function createSubscription(Model $billable, SubscriptionBuilder $builder);
+    public function createSubscription(SubscriptionBuilder $builder);
 
     /**
-     * @param Model $billable
-     *
+     * @param CustomerBuilder $billable
      * @return mixed
      */
-    public function updateCustomerDetails(Model $billable);
+    public function updateCustomer(CustomerBuilder $billable);
 }

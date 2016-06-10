@@ -9,8 +9,9 @@ Planejamento de Suporte aos Gateways:
 | Gateway   | Status | Observações |
 |---|---|---|
 | **MoIP.com.br** | **Em Andamento** | Suporte Integral |
+| **Iugu.com** | Planejado | * Não Suporta Cupons |
 | **Pagar.me** | Planejado | - |
-| **Iugu.com** | Planejado | - |
+
 
 ## Instalação
 
@@ -46,25 +47,13 @@ $table->string('customer_id')->nullable();
 $table->string('subscription_id')->nullable();
 $table->string('card_brand')->nullable();
 $table->string('card_last_four')->nullable();
-
-// Os seguinte campos são usados para passar informações
-// Para a API do MoIP, então podem tanto ser criados na
-// Tabela quanto via accessor, caso seus campos já existam
-// com outro nome que não os da convenção abaixo
-$table->string('document')->nullable();
-$table->date('birthday')->nullable();
-$table->string('phone_area_code')->nullable();
-$table->string('phone_number')->nullable();
-$table->string('full_name')->nullable();
-$table->string('address_street')->nullable();
-$table->string('address_number')->nullable();
-$table->string('address_complement')->nullable();
-$table->string('address_district')->nullable();
-$table->string('address_city')->nullable();
-$table->string('address_state')->nullable();
-$table->string('address_country')->nullable()->default('BRA');
-$table->string('address_zip')->nullable();
-
+$table->string('plan_code')->nullable();
+$table->string('plan_name')->nullable();
+$table->integer('amount')->nullable();
+$table->string('status')->nullable();
+$table->date('expires_at')->nullable();
+$table->date('trial_expires_at')->nullable();
+$table->text('subscription_metadata')->nullable();
 ```
 
 
@@ -133,33 +122,68 @@ A API do Caixeiro oferecerá opções de utilização dos mesmos, não de gerenc
 
 ### Clientes
 
-#### Criando um Cliente
+#### Criando ou Alterando um Cliente
 Antes de criar uma assinatura, precisamos criar um cliente junto ao gateway, passar um cartão de crétito não é obrigatório caso deseje criar posteriormente uma assinatura via boleto bancário.
 
 ```php
 
-// Com Cartão de Crédito
-$user->prepareCustomer()
-	->withCreditCard('Diego Hernandes', '4111111111111111', 12, 18)
-	->save();
-	
-// Sem Cartão de Crédito
-$user->prepareCustomer()->save();	
+/**
+ * A variável $user simboliza o cenário comum onde
+ * a assinatura é ligada a um usuáro.
+ * Qualquer model que use a Trait Billable
+ * pode ser usada.
+ * /
+
+$user->customerData()
+	// Nome Completo
+    ->withName($user->name)
+	// Email
+    ->withEmail($user->email)
+	// Nascimento
+    ->withBirthday('1990-02-11')
+	// Rua, Numero, Complemento
+	// Bairro, Cidade, Estado
+	// Pais, CEP
+    ->withAddress(
+        'Rua Linux Torvals', '42', 'A',
+        'LinuxLandia', 'São Paulo', 'São Paulo',
+        'BRA', '12345-000')
+    // CPF
+    ->withDocument('12345678909')
+	// Telefone
+    ->withPhoneNumber('11', '988887777')
+	// Caso a API Use Dados do Cartão de Crédito Diretamente
+    ->withCreditCard(
+        'Linus Torvalds',
+        '4111111111111111',
+        '12', '17', '789'
+    )
+    // Caso a deseje passar um TOKEN gerado via
+    // JS ao inves dos dados do cartão
+    // nesse caso o método acima não deve ser usado.
+    ->withCreditCardToken('7bcbb4ae59be06caf9966470c68f250e')
+    // Finalmente cria o assinante
+    ->save();
 
 ```
 
-#### Atualizando um cliente
-A qualquer momento, caso o cliente tenha atualizado o endereço ou ainda o telefone, é interessante atualizarmos as informações junto ao gateway de pagamento, para fazer isso, basta executar:
+Para alteração, a API é a mesma, todos os métodos disponíveis na criação também podem ser usados na alteração (cada gateway tem suas regras de atualização, um manual de uso mais detalhado será criado em breve) porem deve se chamar o método `update()` após setar os dados.
 
 ```php
 
-$user->updateCustomerDetails();
+$user->customerData()
+	// Alterando o Telefone
+    ->withPhoneNumber('33', '544443333')
+	// Trocando o cartão de crédito
+    ->withCreditCard(
+        'Linus Torvalds',
+        '4222222222222222',
+        '02', '22', '743'
+    )
+    // e finalmente o update
+    ->update();
 
 ```
-
-#### Alterando o Cartão de um Cliente
-
-@todo
 
 
 ### Assinaturas

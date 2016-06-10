@@ -3,12 +3,12 @@
 namespace Artesaos\Caixeiro\Drivers\MoIP;
 
 use Artesaos\Caixeiro\Contracts\Driver\Driver;
-use Artesaos\Caixeiro\CustomerBuilder;
+use Artesaos\Caixeiro\Builders\CustomerBuilder;
 use Artesaos\Caixeiro\Exceptions\CaixeiroException;
-use Artesaos\Caixeiro\SubscriptionBuilder;
+use Artesaos\Caixeiro\Builders\SubscriptionBuilder;
 use Artesaos\MoIPSubscriptions\MoIPSubscriptions;
 use Artesaos\MoIPSubscriptions\Resources\Customer;
-use Artesaos\MoIPSubscriptions\Resources\Subscription;
+use Artesaos\MoIPSubscriptions\Resources\Subscription as SubscriptionResource;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -93,7 +93,7 @@ class MoIPDriver implements Driver
     protected function findSubscription($billable)
     {
         /** @var Subscription $subscription */
-        $subscription = Subscription::find($billable->subscription_id);
+        $subscription = SubscriptionResource::find($billable->subscription_id);
 
         return $subscription;
     }
@@ -106,38 +106,14 @@ class MoIPDriver implements Driver
     public function prepareCustomer(CustomerBuilder $builder)
     {
         $billable = $builder->getBillable();
+        
         if (!$billable->customer_id) {
+
+            $id = md5(mt_rand(100000, 999999).microtime(true));
+
             $customer = new Customer();
 
-            $customer->code = 'customer-'.$billable->id;
-            $customer->email = $billable->email;
-            $customer->fullname = $billable->full_name;
-            $customer->cpf = $billable->document;
-            $customer->phone_area_code = $billable->phone_area_code;
-            $customer->phone_number = $billable->phone_number;
-
-            $bithday = Carbon::createFromFormat('Y-m-d', $billable->birthday);
-
-            $customer->birthdate_day = $bithday->format('d');
-            $customer->birthdate_month = $bithday->format('m');
-            $customer->birthdate_year = $bithday->format('Y');
-
-            $customer->address = [
-                'street' => $billable->address_street,
-                'number' => $billable->address_number,
-                'complement' => $billable->address_complement,
-                'district' => $billable->address_district,
-                'city' => $billable->address_city,
-                'state' => $billable->address_state,
-                'country' => $billable->address_country,
-                'zipcode' => $billable->address_zip,
-            ];
-
-            if ($builder->cardPresent()) {
-                $customer->billing_info = [
-                    'credit_card' => $builder->getCardData(),
-                ];
-            }
+            $customer = $this->fillCustomerFromBuilder($customer, $builder, $id);
 
             $customer->save();
 
@@ -146,57 +122,101 @@ class MoIPDriver implements Driver
                 throw new CaixeiroException(json_encode($errors));
             }
 
-            $customer = Customer::find('customer-'.$billable->id);
+            $this->saveCustomerInformation($billable, $id);
 
-            if ($customer) {
-                $billable->customer_id = $customer->code;
-                $billing_info = $customer->billing_info;
-                if (is_array($billing_info) && array_key_exists('credit_cards', $billing_info)) {
-                    if (isset($billing_info['credit_cards'][0])) {
-                        $billable->card_brand = $billing_info['credit_cards'][0]['brand'];
-                        $billable->card_last_four = $billing_info['credit_cards'][0]['last_four_digits'];
-                    }
-                }
-
-                $billable->save();
-
-                return true;
-            }
+            return true;
         }
 
         return false;
     }
 
+    protected function saveCustomerInformation(Model $billable, $customer_id)
+    {
+        $customer = Customer::find($customer_id);
+
+        if ($customer) {
+            $billable->customer_id = $customer->code;
+            $billing_info = $customer->billing_info;
+            if (is_array($billing_info) && array_key_exists('credit_cards', $billing_info)) {
+                if (isset($billing_info['credit_cards'][0])) {
+                    $billable->card_brand = $billing_info['credit_cards'][0]['brand'];
+                    $billable->card_last_four = $billing_info['credit_cards'][0]['last_four_digits'];
+                }
+            }
+
+            $billable->save();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function fillCustomerFromBuilder(Customer $customer, CustomerBuilder $builder, $id = null)
+    {
+        if ($id) {
+            $customer->code = $id;
+        }
+
+        if ($builder->getName()) {
+            $customer->fullname = $builder->getName();
+        }
+
+        if ($builder->getEmail()) {
+            $customer->email = $builder->getEmail();
+        }
+
+        if ($builder->getDocument()) {
+            $customer->cpf = $builder->getDocument();
+        }
+
+        if ($builder->phoneNumberPresent()) {
+            // phone number
+            $phoneNumber = $builder->getPhoneNumber();
+            $customer->phone_area_code = $phoneNumber['area'];
+            $customer->phone_number = $phoneNumber['number'];
+        }
+
+        if ($builder->getBirthday()) {
+            // birthday
+            $birthday = Carbon::createFromFormat('Y-m-d', $builder->getBirthday());
+            $customer->birthdate_day = $birthday->format('d');
+            $customer->birthdate_month = $birthday->format('m');
+            $customer->birthdate_year = $birthday->format('Y');
+        }
+
+        if ($builder->addressPresent()) {
+            $address = $builder->getAddress();
+            $address['zipcode'] = $address['zip'];
+            unset($address['zip']);
+
+            $customer->address = $address;
+        }
+
+        if ($builder->cardPresent() && $id) {
+            $customer->billing_info = [
+                'credit_card' => $builder->getCardData(),
+            ];
+        }
+
+        return $customer;
+    }
+
     /**
-     * @param Model $billable
-     *
+     * @param CustomerBuilder $builder
      * @return bool
      */
-    public function updateCustomerDetails(Model $billable)
+    public function updateCustomer(CustomerBuilder $builder)
     {
+        $billable = $builder->getBillable();
+
+        /** @var Customer $customer */
         $customer = Customer::find($billable->customer_id);
 
-        $customer->email = $billable->email;
-        $customer->fullname = $billable->full_name;
-        $customer->phone_area_code = $billable->phone_area_code;
-        $customer->phone_number = $billable->phone_number;
-
-        $bithday = Carbon::createFromFormat('Y-m-d', $billable->birthday);
-
-        $customer->birthdate_day = $bithday->format('d');
-        $customer->birthdate_month = $bithday->format('m');
-        $customer->birthdate_year = $bithday->format('Y');
-
-        $customer->address = [
-            'street' => $billable->address_street,
-            'number' => $billable->address_number,
-            'complement' => $billable->address_complement,
-            'district' => $billable->address_district,
-            'city' => $billable->address_city,
-            'state' => $billable->address_state,
-            'country' => $billable->address_country,
-            'zipcode' => $billable->address_zip,
-        ];
+        if ($customer) {
+            /** @var Customer $customer */
+            $customer = $this->fillCustomerFromBuilder($customer, $builder);
+        }
 
         $customer->update();
 
@@ -205,12 +225,26 @@ class MoIPDriver implements Driver
             throw new CaixeiroException(json_encode($errors));
         }
 
+        if ($builder->cardPresent()) {
+            $cardData = $builder->getCardData();
+            $customer->updateCreditCard(
+                $cardData['holder_name'],
+                $cardData['number'],
+                $cardData['expiration_month'],
+                $cardData['expiration_year']
+            );
+        }
+
+        $this->saveCustomerInformation($billable, $billable->customer_id);
+
         return true;
     }
 
-    public function createSubscription(Model $billable, SubscriptionBuilder $builder)
+    public function createSubscription(SubscriptionBuilder $builder)
     {
-        $subscription = new Subscription();
+        $billable = $builder->getBillable();
+        
+        $subscription = new SubscriptionResource();
 
         $subscription->code = 'subs-'.$billable->id;
 
@@ -252,7 +286,7 @@ class MoIPDriver implements Driver
     /**
      * @param Model $billable
      *
-     * @return Subscription|null
+     * @return SubscriptionResource|null
      */
     protected function cachedSubscription(Model $billable)
     {
@@ -262,7 +296,7 @@ class MoIPDriver implements Driver
 
         if ($subscription_id) {
             if (!$cacheStore->has($subscription_id)) {
-                $subscription = Subscription::find($subscription_id);
+                $subscription = SubscriptionResource::find($subscription_id);
                 if ($subscription) {
                     $cacheStore->put($subscription_id, $subscription, 10);
                 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Artesaos\Caixeiro;
+namespace Artesaos\Caixeiro\Providers;
 
 use Artesaos\Caixeiro\Contracts\Driver\Driver;
 use Artesaos\Caixeiro\Drivers\MoIP\MoIPDriver;
