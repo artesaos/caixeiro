@@ -1,6 +1,6 @@
 # TRABALHO EM PROGRESSO - Artesaos Caixeiro
 
-**Caixiero** é uma solução de Pagamentos Recorrentes (Assinaturas) desenvolvida para a comunidade brasileira que tem regras especiais de pagamento e gateways de pagamentos extremamente diferentes.
+**Caixeiro** é uma solução de Pagamentos Recorrentes (Assinaturas) desenvolvida para a comunidade brasileira que tem regras especiais de pagamento e gateways de pagamentos extremamente diferentes.
 
 A ideia desse projeto é oferecer uma API simplificada, onde seja fácil a implementação de pagamentos recorrentes com o seu gateway de preferencia.
 
