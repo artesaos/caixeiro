@@ -203,7 +203,7 @@ $user->newSubscription('plano-basico')
 // Caso queira sobrescrever o valor da assinatura para 120 reais
 $user->newSubscription('plano-basico')
 	->withCustomAmount(12000)
-	->crete();
+	->create();
 	
 // Caso o cliente tenha informado um cupon de desconto
 $user->newSubscription('plano-basico')
